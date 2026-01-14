@@ -1,0 +1,35 @@
+[project]
+name = "amplifier-module-tool-deepresearch"
+version = "0.1.0"
+description = "Deep research tool for Amplifier - delegates to enhanced providers for AI-powered research"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "amplifier-core",
+    "amplifier-module-provider-openai",
+    "amplifier-module-provider-anthropic",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv.sources]
+amplifier-core = { git = "https://github.com/microsoft/amplifier-core" }
+# Use robotdad forks with deep research features until PRs merge
+amplifier-module-provider-openai = { git = "https://github.com/robotdad/amplifier-module-provider-openai", branch = "feat/deep-research-support" }
+amplifier-module-provider-anthropic = { git = "https://github.com/robotdad/amplifier-module-provider-anthropic", branch = "feat/native-web-search" }
+
+[tool.hatch.build.targets.wheel]
+packages = ["amplifier_module_tool_deepresearch"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "C4", "UP"]
+
+[tool.pyright]
+typeCheckingMode = "basic"
+pythonVersion = "3.11"
