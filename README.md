@@ -58,6 +58,16 @@ Currently using forks with these features:
 - https://github.com/robotdad/amplifier-module-provider-openai (branch: feat/deep-research-support)
 - https://github.com/robotdad/amplifier-module-provider-anthropic (branch: feat/native-web-search)
 
+## Example Bundle
+
+An example bundle is included at `examples/deep-research-bundle.md`. Use it directly:
+
+```bash
+amplifier run --bundle ./examples/deep-research-bundle.md
+```
+
+Or as a reference for building your own bundle with deep research capabilities.
+
 ## License
 
 MIT
