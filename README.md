@@ -60,10 +60,14 @@ Currently using forks with these features:
 
 ## Example Bundle
 
-An example bundle is included at `examples/deep-research-bundle.md`. Use it directly:
+An example bundle is included at `examples/deep-research-bundle.md`. Use it:
 
 ```bash
-amplifier run --bundle ./examples/deep-research-bundle.md
+# Interactive session with the bundle
+amplifier --bundle ./examples/deep-research-bundle.md
+
+# Single prompt execution
+amplifier run --bundle ./examples/deep-research-bundle.md "Research the latest advances in quantum computing"
 ```
 
 Or as a reference for building your own bundle with deep research capabilities.
