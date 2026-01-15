@@ -229,6 +229,13 @@ class DeepResearchTool:
         if enable_code_interpreter:
             tools.append({"type": "code_interpreter"})
 
+        # Deep research models need high token limits - reasoning consumes
+        # significant tokens before content is produced. Without sufficient
+        # budget, responses are truncated with empty content.
+        # o3-deep-research: needs ~16k+ for reasoning + content
+        # o4-mini-deep-research: needs ~12k+ for reasoning + content
+        max_tokens = 16000 if task_complexity == "high" else 12000
+
         # Build chat request
         request = ChatRequest(
             messages=[
@@ -251,6 +258,7 @@ class DeepResearchTool:
             background=True,
             poll_interval=self._poll_interval,
             timeout=self._timeout,
+            max_tokens=max_tokens,
         )
 
         # Extract text content from response
