@@ -6,12 +6,12 @@ bundle:
 
 providers:
   - module: provider-openai
-    source: git+https://github.com/robotdad/amplifier-module-provider-openai@feat/deep-research-support
+    source: git+https://github.com/robotdad/amplifier-module-provider-openai@feat-deep-research-support
     config:
       # API key from environment: OPENAI_API_KEY
 
   - module: provider-anthropic
-    source: git+https://github.com/robotdad/amplifier-module-provider-anthropic@feat/native-web-search
+    source: git+https://github.com/robotdad/amplifier-module-provider-anthropic@feat-native-web-search
     config:
       # API key from environment: ANTHROPIC_API_KEY
       enable_web_search: true
