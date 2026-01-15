@@ -74,12 +74,6 @@ class DeepResearchTool:
                 "type": "string",
                 "description": "The research question or topic to investigate thoroughly",
             },
-            "provider": {
-                "type": "string",
-                "enum": ["openai", "anthropic", "auto"],
-                "description": "Which provider to use. 'auto' selects based on availability.",
-                "default": "auto",
-            },
             "task_complexity": {
                 "type": "string",
                 "enum": ["low", "medium", "high"],
@@ -97,14 +91,6 @@ class DeepResearchTool:
 
     # Configuration fields exposed to users
     config_fields = [
-        ConfigField(
-            id="default_provider",
-            display_name="Default Provider",
-            field_type="choice",
-            prompt="Which provider to use by default?",
-            choices=["auto", "openai", "anthropic"],
-            default="auto",
-        ),
         ConfigField(
             id="timeout",
             display_name="Timeout",
@@ -130,7 +116,6 @@ class DeepResearchTool:
         """
         self._coordinator = coordinator
         self._config = config
-        self._default_provider = config.get("default_provider", "auto")
         self._timeout = config.get("timeout", DEFAULT_TIMEOUT)
         self._poll_interval = config.get("poll_interval", DEFAULT_POLL_INTERVAL)
 
@@ -147,16 +132,17 @@ class DeepResearchTool:
         if not query:
             return ToolResult(success=False, error="query is required")
 
-        provider_choice = input.get("provider", self._default_provider)
         task_complexity = input.get("task_complexity", "medium")
         enable_code_interpreter = input.get("enable_code_interpreter", False)
 
-        # Select provider
-        provider, provider_name = await self._select_provider(provider_choice)
+        # Select provider based on what's mounted
+        provider, provider_name, error = self._select_provider()
+        if error:
+            return ToolResult(success=False, error=error)
         if not provider:
             return ToolResult(
                 success=False,
-                error=f"No suitable provider available. Requested: {provider_choice}",
+                error="No suitable provider available. Deep research requires OpenAI or Anthropic.",
             )
 
         logger.info(f"Using provider '{provider_name}' for deep research")
@@ -182,29 +168,31 @@ class DeepResearchTool:
             logger.exception(f"Deep research failed: {e}")
             return ToolResult(success=False, error=str(e))
 
-    async def _select_provider(self, preference: str) -> tuple[Any | None, str | None]:
-        """Select the best available provider.
+    def _select_provider(self) -> tuple[Any | None, str | None, str | None]:
+        """Select provider based on what's mounted.
 
-        Args:
-            preference: Provider preference (openai, anthropic, or auto)
+        Uses whichever supported provider is available. If both OpenAI and
+        Anthropic are mounted, prefers OpenAI (has dedicated deep research models).
 
         Returns:
-            Tuple of (provider instance, provider name) or (None, None)
+            Tuple of (provider instance, provider name, error message)
         """
         providers = self._coordinator.get("providers") or {}
 
-        if preference == "auto":
-            # Prefer OpenAI for deep research if available (has dedicated models)
-            if "openai" in providers:
-                return providers["openai"], "openai"
-            if "anthropic" in providers:
-                return providers["anthropic"], "anthropic"
-            return None, None
+        has_openai = "openai" in providers
+        has_anthropic = "anthropic" in providers
 
-        if preference in providers:
-            return providers[preference], preference
+        if has_openai:
+            return providers["openai"], "openai", None
+        if has_anthropic:
+            return providers["anthropic"], "anthropic", None
 
-        return None, None
+        # Neither supported provider is available
+        mounted = list(providers.keys()) if providers else []
+        return None, None, (
+            f"Deep research requires OpenAI or Anthropic provider. "
+            f"Currently mounted: {mounted or 'none'}"
+        )
 
     async def _execute_openai(
         self,
