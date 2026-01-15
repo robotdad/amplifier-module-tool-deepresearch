@@ -191,7 +191,7 @@ class DeepResearchTool:
         Returns:
             Tuple of (provider instance, provider name) or (None, None)
         """
-        providers = self._coordinator.get_mounted("providers") or {}
+        providers = self._coordinator.get("providers") or {}
 
         if preference == "auto":
             # Prefer OpenAI for deep research if available (has dedicated models)
