@@ -60,10 +60,15 @@ class DeepResearchTool:
     name = "deep_research"
     description = (
         "Perform deep, comprehensive research on a topic using AI models with "
-        "web search and extended reasoning capabilities. Use this tool when the "
-        "user needs thorough research on a complex topic, multiple sources and "
-        "perspectives are needed, the question requires extended reasoning, or "
-        "web search would significantly improve the answer quality."
+        "web search and extended reasoning capabilities. IMPORTANT: Before calling "
+        "this tool, you MUST clarify the research request with the user - ask about "
+        "scope (how broad/narrow), preferences (sources, perspectives), constraints "
+        "(time period, geographic focus), and desired output format. Confirm the "
+        "refined query with the user before proceeding, as research takes 10-15 "
+        "minutes and is resource-intensive. Use this tool when the user needs "
+        "thorough research on a complex topic, multiple sources and perspectives "
+        "are needed, the question requires extended reasoning, or web search would "
+        "significantly improve the answer quality."
     )
 
     # Tool input schema for LLM
@@ -182,15 +187,17 @@ class DeepResearchTool:
 
         # Filter to supported providers only
         supported = ["anthropic", "openai"]
-        available = {
-            name: prov for name, prov in providers.items() if name in supported
-        }
+        available = {name: prov for name, prov in providers.items() if name in supported}
 
         if not available:
             mounted = list(providers.keys()) if providers else []
-            return None, None, (
-                f"Deep research requires OpenAI or Anthropic provider. "
-                f"Currently mounted: {mounted or 'none'}"
+            return (
+                None,
+                None,
+                (
+                    f"Deep research requires OpenAI or Anthropic provider. "
+                    f"Currently mounted: {mounted or 'none'}"
+                ),
             )
 
         # Select by priority (lower number = higher priority, default 100)
@@ -250,6 +257,13 @@ class DeepResearchTool:
             model=model,
         )
 
+        # Reasoning effort control: Deep research models share max_output_tokens
+        # between reasoning AND visible output. Without effort control, the model
+        # spends all tokens on reasoning before producing content.
+        # 'low' effort constrains reasoning token usage to leave budget for output.
+        # 'auto' summary lets the model decide summary detail level.
+        reasoning = {"effort": "low", "summary": "auto"}
+
         # Execute with background mode (auto-enabled for deep research models)
         response = await provider.complete(
             request,
@@ -259,6 +273,8 @@ class DeepResearchTool:
             poll_interval=self._poll_interval,
             timeout=self._timeout,
             max_tokens=max_tokens,
+            max_tool_calls=20,  # Prevent excessive searching that consumes token budget
+            reasoning=reasoning,  # Control reasoning token usage
         )
 
         # Extract text content from response
@@ -310,7 +326,21 @@ class DeepResearchTool:
         return text
 
     def _extract_response_text(self, response: Any) -> str:
-        """Extract text content from a chat response."""
+        """Extract text content from a chat response.
+
+        Per OpenAI docs: 'response.output_text is the safest way to retrieve
+        the final human-readable answer.' We check this first before falling
+        back to other extraction methods.
+        """
+        # Per OpenAI docs, output_text is the safest way to get the final answer
+        if hasattr(response, "output_text") and response.output_text:
+            return response.output_text
+
+        # Fallback: check the text field (used by our ChatResponse)
+        if hasattr(response, "text") and response.text:
+            return response.text
+
+        # Fallback: extract from content blocks
         if hasattr(response, "content") and response.content:
             if isinstance(response.content, str):
                 return response.content
@@ -322,9 +352,10 @@ class DeepResearchTool:
                         texts.append(block.text)
                     elif isinstance(block, dict) and "text" in block:
                         texts.append(block["text"])
-                return "\n".join(texts)
-        if hasattr(response, "text") and response.text:
-            return response.text
+                if texts:
+                    return "\n".join(texts)
+
+        # Last resort: stringify the response
         return str(response)
 
     def _format_citations(self, web_search_results: list[dict]) -> str:
