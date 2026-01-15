@@ -14,7 +14,8 @@ providers:
     source: git+https://github.com/robotdad/amplifier-module-provider-anthropic@feat-native-web-search
     config:
       # API key from environment: ANTHROPIC_API_KEY
-      enable_web_search: true
+      # Note: enable_web_search is NOT set at config level to avoid collision with
+      # foundation's web_search tool. The deep_research tool enables it per-request.
 
 tools:
   - module: tool-deepresearch
