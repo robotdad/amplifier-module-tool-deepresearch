@@ -41,7 +41,7 @@ The root bundle provides just the tool and providers (no orchestrator). It must 
 
 ```bash
 # Add the example bundle (includes foundation + deep-research)
-amplifier bundle add "git+https://github.com/robotdad/amplifier-module-tool-deepresearch#examples/deep-research-bundle.md"
+amplifier bundle add "git+https://github.com/robotdad/amplifier-module-tool-deepresearch@main#subdirectory=examples"
 
 # Set as active
 amplifier bundle use deep-research-assistant
