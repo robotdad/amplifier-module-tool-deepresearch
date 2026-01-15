@@ -2,6 +2,8 @@
 
 Deep research tool for Amplifier - delegates to enhanced providers for AI-powered research.
 
+> **Credit**: This work is based on initial research and implementation by [@michaeljabbour](https://github.com/michaeljabbour) in [amplifier-module-deepresearch](https://github.com/michaeljabbour/amplifier-module-deepresearch).
+
 ## Overview
 
 This tool provides a unified interface for AI-powered deep research, automatically selecting and configuring the appropriate provider based on availability and task requirements.
