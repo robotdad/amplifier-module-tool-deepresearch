@@ -169,49 +169,43 @@ class DeepResearchTool:
             return ToolResult(success=False, error=str(e))
 
     def _select_provider(self) -> tuple[Any | None, str | None, str | None]:
-        """Select provider based on session configuration.
+        """Select provider based on priority configuration.
 
-        Checks the session's configured provider first, falling back to
-        what's mounted if no explicit configuration.
+        Uses the provider priority system - lower priority number means
+        higher precedence. This respects the user's `amplifier provider use`
+        configuration.
 
         Returns:
             Tuple of (provider instance, provider name, error message)
         """
         providers = self._coordinator.get("providers") or {}
-        config = self._coordinator.config
 
-        # Check for configured provider in various locations
-        configured_provider = None
+        # Filter to supported providers only
+        supported = ["anthropic", "openai"]
+        available = {
+            name: prov for name, prov in providers.items() if name in supported
+        }
 
-        # Try session.provider (where amplifier provider use stores it)
-        if "session" in config:
-            configured_provider = config["session"].get("provider")
+        if not available:
+            mounted = list(providers.keys()) if providers else []
+            return None, None, (
+                f"Deep research requires OpenAI or Anthropic provider. "
+                f"Currently mounted: {mounted or 'none'}"
+            )
 
-        # Try orchestrator.config.default_provider
-        if not configured_provider and "orchestrator" in config:
-            orch_config = config["orchestrator"].get("config", {})
-            configured_provider = orch_config.get("default_provider")
+        # Select by priority (lower number = higher priority, default 100)
+        def get_priority(item: tuple[str, Any]) -> int:
+            name, provider = item
+            return getattr(provider, "priority", 100)
 
-        # Try top-level default_provider
-        if not configured_provider:
-            configured_provider = config.get("default_provider")
+        sorted_providers = sorted(available.items(), key=get_priority)
+        selected_name, selected_provider = sorted_providers[0]
 
-        # If we found a configured provider, use it
-        if configured_provider and configured_provider in providers:
-            return providers[configured_provider], configured_provider, None
+        # Log selection for transparency
+        priorities = {name: getattr(p, "priority", 100) for name, p in available.items()}
+        logger.info(f"[DEEP_RESEARCH] Provider priorities: {priorities}, selected: {selected_name}")
 
-        # Fallback: use first available supported provider (prefer Anthropic)
-        if "anthropic" in providers:
-            return providers["anthropic"], "anthropic", None
-        if "openai" in providers:
-            return providers["openai"], "openai", None
-
-        # Neither supported provider is available
-        mounted = list(providers.keys()) if providers else []
-        return None, None, (
-            f"Deep research requires OpenAI or Anthropic provider. "
-            f"Currently mounted: {mounted or 'none'}"
-        )
+        return selected_provider, selected_name, None
 
     async def _execute_openai(
         self,
