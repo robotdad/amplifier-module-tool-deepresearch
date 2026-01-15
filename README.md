@@ -27,11 +27,35 @@ This tool provides a unified interface for AI-powered deep research, automatical
 ```json
 {
   "query": "Research question or topic",
-  "provider": "auto",  // "openai", "anthropic", or "auto"
   "task_complexity": "medium",  // "low", "medium", or "high"
   "enable_code_interpreter": false  // OpenAI only
 }
 ```
+
+### Provider Selection
+
+The tool automatically selects between OpenAI and Anthropic based on **provider priority** configured in your `~/.amplifier/settings.yaml`:
+
+```yaml
+config:
+  providers:
+  - config:
+      api_key: ${ANTHROPIC_API_KEY}
+      priority: 1        # Lower number = higher priority (this one wins)
+    module: provider-anthropic
+  - config:
+      api_key: ${OPENAI_API_KEY}
+      priority: 10       # Higher number = lower priority
+    module: provider-openai
+```
+
+**How it works:**
+- The tool reads the `priority` attribute from each mounted provider
+- Lower number = higher precedence
+- When you run `amplifier provider use anthropic`, it sets that provider's priority to 1
+- No manual configuration needed if you use `amplifier provider use`
+
+This means your research queries automatically use whichever provider you've configured as primary.
 
 ## Installation
 
