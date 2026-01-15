@@ -35,12 +35,16 @@ This tool provides a unified interface for AI-powered deep research, automatical
 
 ## Installation
 
+The root bundle provides just the tool and providers (no orchestrator). It must be composed with foundation or another bundle that provides an orchestrator.
+
+**Quickstart using the included example bundle:**
+
 ```bash
-# Add the bundle from git
-amplifier bundle add git+https://github.com/robotdad/amplifier-module-tool-deepresearch
+# Add the example bundle (includes foundation + deep-research)
+amplifier bundle add "git+https://github.com/robotdad/amplifier-module-tool-deepresearch#examples/deep-research-bundle.md"
 
 # Set as active
-amplifier bundle use deep-research
+amplifier bundle use deep-research-assistant
 
 # Start interactive session
 amplifier
@@ -49,14 +53,27 @@ amplifier
 amplifier run "Research the latest advances in quantum computing"
 ```
 
-## Composing with Foundation
+**Or compose it yourself:**
 
-The root `bundle.md` provides just the tool and providers. To use with foundation, see `examples/deep-research-bundle.md`:
+```bash
+# 1. Add the deep-research bundle (tool + providers, no orchestrator)
+amplifier bundle add git+https://github.com/robotdad/amplifier-module-tool-deepresearch
+
+# 2. Create your own bundle that includes foundation + deep-research
+```
 
 ```yaml
+# my-research-bundle.md
 includes:
   - bundle: git+https://github.com/microsoft/amplifier-foundation@main
   - bundle: git+https://github.com/robotdad/amplifier-module-tool-deepresearch@main
+```
+
+```bash
+# 3. Add and use your bundle
+amplifier bundle add file://./my-research-bundle.md
+amplifier bundle use my-research-bundle
+amplifier
 ```
 
 ## Dependencies
