@@ -5,16 +5,20 @@ bundle:
   description: Deep research capability using enhanced providers with web search and background polling
 
 providers:
-  - module: git+https://github.com/robotdad/amplifier-module-provider-openai@feat/deep-research-support
+  - module: provider-openai
+    source: git+https://github.com/robotdad/amplifier-module-provider-openai@feat/deep-research-support
     config:
       # API key from environment: OPENAI_API_KEY
-  - module: git+https://github.com/robotdad/amplifier-module-provider-anthropic@feat/native-web-search
+
+  - module: provider-anthropic
+    source: git+https://github.com/robotdad/amplifier-module-provider-anthropic@feat/native-web-search
     config:
       # API key from environment: ANTHROPIC_API_KEY
       enable_web_search: true
 
 tools:
-  - module: git+https://github.com/robotdad/amplifier-module-tool-deepresearch
+  - module: tool-deepresearch
+    source: git+https://github.com/robotdad/amplifier-module-tool-deepresearch
     config:
       default_provider: auto
       timeout: 1800
