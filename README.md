@@ -34,22 +34,32 @@ This tool provides a unified interface for AI-powered deep research, automatical
 ## Installation
 
 ```bash
-uv pip install git+https://github.com/robotdad/amplifier-module-tool-deepresearch
+# Add the bundle from git
+amplifier bundle add git+https://github.com/robotdad/amplifier-module-tool-deepresearch
+
+# Set as active
+amplifier bundle use deep-research
+
+# Start interactive session
+amplifier
+
+# Or run a single prompt
+amplifier run "Research the latest advances in quantum computing"
 ```
 
-## Configuration
+## Composing with Foundation
+
+The root `bundle.md` provides just the tool and providers. To use with foundation, see `examples/deep-research-bundle.md`:
 
 ```yaml
-tools:
-  deep_research:
-    default_provider: auto  # or "openai" / "anthropic"
-    timeout: 1800  # 30 minutes
-    poll_interval: 5.0
+includes:
+  - bundle: git+https://github.com/microsoft/amplifier-foundation@main
+  - bundle: git+https://github.com/robotdad/amplifier-module-tool-deepresearch@main
 ```
 
 ## Dependencies
 
-This module depends on enhanced provider modules with deep research support:
+This bundle includes enhanced provider modules with deep research support:
 
 - `amplifier-module-provider-openai` (with background polling and native tools)
 - `amplifier-module-provider-anthropic` (with native web search)
@@ -57,20 +67,6 @@ This module depends on enhanced provider modules with deep research support:
 Currently using forks with these features:
 - https://github.com/robotdad/amplifier-module-provider-openai (branch: feat/deep-research-support)
 - https://github.com/robotdad/amplifier-module-provider-anthropic (branch: feat/native-web-search)
-
-## Example Bundle
-
-An example bundle is included at `examples/deep-research-bundle.md`. Use it:
-
-```bash
-# Interactive session with the bundle
-amplifier --bundle ./examples/deep-research-bundle.md
-
-# Single prompt execution
-amplifier run --bundle ./examples/deep-research-bundle.md "Research the latest advances in quantum computing"
-```
-
-Or as a reference for building your own bundle with deep research capabilities.
 
 ## License
 

@@ -1,27 +1,12 @@
 ---
 bundle:
-  name: deep-research
+  name: deep-research-assistant
   version: 0.1.0
-  description: Bundle with deep research capability using enhanced providers
+  description: Full research assistant combining foundation with deep research capability
 
 includes:
   - bundle: git+https://github.com/microsoft/amplifier-foundation@main
-
-providers:
-  - module: git+https://github.com/robotdad/amplifier-module-provider-openai@feat/deep-research-support
-    config:
-      # API key from environment: OPENAI_API_KEY
-  - module: git+https://github.com/robotdad/amplifier-module-provider-anthropic@feat/native-web-search
-    config:
-      # API key from environment: ANTHROPIC_API_KEY
-      enable_web_search: true
-
-tools:
-  - module: git+https://github.com/robotdad/amplifier-module-tool-deepresearch
-    config:
-      default_provider: auto
-      timeout: 1800
-      poll_interval: 5.0
+  - bundle: git+https://github.com/robotdad/amplifier-module-tool-deepresearch@main
 ---
 
 # Deep Research Assistant
