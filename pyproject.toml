@@ -17,8 +17,8 @@ build-backend = "hatchling.build"
 [tool.uv.sources]
 amplifier-core = { git = "https://github.com/microsoft/amplifier-core" }
 # Use robotdad forks with deep research features until PRs merge
-amplifier-module-provider-openai = { git = "https://github.com/robotdad/amplifier-module-provider-openai", branch = "feat/deep-research-support" }
-amplifier-module-provider-anthropic = { git = "https://github.com/robotdad/amplifier-module-provider-anthropic", branch = "feat/native-web-search" }
+amplifier-module-provider-openai = { git = "https://github.com/robotdad/amplifier-module-provider-openai", branch = "feat-deep-research-support" }
+amplifier-module-provider-anthropic = { git = "https://github.com/robotdad/amplifier-module-provider-anthropic", branch = "feat-native-web-search" }
 
 [tool.hatch.build.targets.wheel]
 packages = ["amplifier_module_tool_deepresearch"]
