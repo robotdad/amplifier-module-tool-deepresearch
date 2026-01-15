@@ -260,9 +260,9 @@ class DeepResearchTool:
         # Reasoning effort control: Deep research models share max_output_tokens
         # between reasoning AND visible output. Without effort control, the model
         # spends all tokens on reasoning before producing content.
-        # 'low' effort constrains reasoning token usage to leave budget for output.
-        # 'auto' summary lets the model decide summary detail level.
-        reasoning = {"effort": "low", "summary": "auto"}
+        # Note: o3-deep-research only supports "medium", o4-mini supports "low"
+        reasoning_effort = "medium" if model == "o3-deep-research" else "low"
+        reasoning = {"effort": reasoning_effort, "summary": "auto"}
 
         # Execute with background mode (auto-enabled for deep research models)
         response = await provider.complete(
