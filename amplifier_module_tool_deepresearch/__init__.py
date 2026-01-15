@@ -180,42 +180,30 @@ class DeepResearchTool:
         providers = self._coordinator.get("providers") or {}
         config = self._coordinator.config
 
-        # Log config for debugging
-        logger.info(f"[DEEP_RESEARCH] Coordinator config keys: {list(config.keys())}")
-        logger.info(f"[DEEP_RESEARCH] Mounted providers: {list(providers.keys())}")
-
         # Check for configured provider in various locations
-        # Try session.provider first (where amplifier provider use might store it)
         configured_provider = None
+
+        # Try session.provider (where amplifier provider use stores it)
         if "session" in config:
             configured_provider = config["session"].get("provider")
-            logger.info(f"[DEEP_RESEARCH] session.provider: {configured_provider}")
 
         # Try orchestrator.config.default_provider
         if not configured_provider and "orchestrator" in config:
             orch_config = config["orchestrator"].get("config", {})
             configured_provider = orch_config.get("default_provider")
-            logger.info(f"[DEEP_RESEARCH] orchestrator.config.default_provider: {configured_provider}")
 
         # Try top-level default_provider
         if not configured_provider:
             configured_provider = config.get("default_provider")
-            logger.info(f"[DEEP_RESEARCH] top-level default_provider: {configured_provider}")
 
         # If we found a configured provider, use it
         if configured_provider and configured_provider in providers:
-            logger.info(f"[DEEP_RESEARCH] Using configured provider: {configured_provider}")
             return providers[configured_provider], configured_provider, None
 
-        # Fallback: use first available supported provider
-        has_openai = "openai" in providers
-        has_anthropic = "anthropic" in providers
-
-        if has_anthropic:
-            logger.info("[DEEP_RESEARCH] Fallback: using anthropic (first available)")
+        # Fallback: use first available supported provider (prefer Anthropic)
+        if "anthropic" in providers:
             return providers["anthropic"], "anthropic", None
-        if has_openai:
-            logger.info("[DEEP_RESEARCH] Fallback: using openai (first available)")
+        if "openai" in providers:
             return providers["openai"], "openai", None
 
         # Neither supported provider is available
