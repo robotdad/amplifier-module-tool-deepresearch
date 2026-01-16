@@ -6,12 +6,12 @@ bundle:
 
 providers:
   - module: provider-openai
-    source: git+https://github.com/robotdad/amplifier-module-provider-openai@feat-deep-research-support
+    source: git+https://github.com/microsoft/amplifier-module-provider-openai
     config:
       # API key from environment: OPENAI_API_KEY
 
   - module: provider-anthropic
-    source: git+https://github.com/robotdad/amplifier-module-provider-anthropic@feat-native-web-search
+    source: git+https://github.com/microsoft/amplifier-module-provider-anthropic
     config:
       # API key from environment: ANTHROPIC_API_KEY
       # Note: enable_web_search is NOT set at config level to avoid collision with
