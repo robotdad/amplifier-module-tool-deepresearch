@@ -277,8 +277,8 @@ class DeepResearchTool:
             reasoning=reasoning,  # Control reasoning token usage
         )
 
-        # Extract text content from response
-        return self._extract_response_text(response)
+        # Extract text content from response, handling incomplete status
+        return self._extract_response_with_status(response)
 
     async def _execute_anthropic(self, provider: Any, query: str, task_complexity: str) -> str:
         """Execute deep research using Anthropic provider.
@@ -324,6 +324,81 @@ class DeepResearchTool:
                 text += f"\n\n## Sources\n{citations}"
 
         return text
+
+    def _extract_response_with_status(self, response: Any) -> str:
+        """Extract text from response, handling incomplete status gracefully.
+
+        Deep research can hit max_output_tokens, returning status='incomplete'.
+        In this case, reasoning/thinking blocks may contain useful partial results.
+        We extract what we can and note the incomplete status.
+        """
+        # Check for incomplete status in metadata
+        is_incomplete = False
+        incomplete_reason = None
+        if hasattr(response, "metadata") and response.metadata:
+            status = response.metadata.get("openai:status")
+            if status == "incomplete":
+                is_incomplete = True
+                incomplete_reason = response.metadata.get("openai:incomplete_reason", "unknown")
+                logger.warning(f"[DEEP_RESEARCH] Response incomplete: {incomplete_reason}")
+
+        # Try to extract the main text content
+        text = self._extract_response_text(response)
+
+        # If we got content, return it (with note if incomplete)
+        if text and text != str(response):
+            if is_incomplete:
+                text += (
+                    f"\n\n---\n**Note:** This research response was truncated "
+                    f"({incomplete_reason}). The analysis above may be partial. "
+                    f"Consider refining your query for a more focused response."
+                )
+            return text
+
+        # If no main text but incomplete, try to salvage from thinking blocks
+        if is_incomplete:
+            thinking_content = self._extract_thinking_summary(response)
+            if thinking_content:
+                return (
+                    f"**Note:** Research hit output limits before producing final content. "
+                    f"Below is a summary extracted from the reasoning process:\n\n"
+                    f"{thinking_content}\n\n"
+                    f"Consider refining your query for a complete response."
+                )
+
+        # Nothing useful found
+        if is_incomplete:
+            return (
+                f"Research was incomplete ({incomplete_reason}) and no content could be extracted. "
+                f"Try a more focused query or lower complexity setting."
+            )
+
+        return text
+
+    def _extract_thinking_summary(self, response: Any) -> str | None:
+        """Extract useful content from thinking/reasoning blocks as fallback.
+
+        When main content is empty but thinking blocks exist, we can salvage
+        partial insights from the reasoning process.
+        """
+        if not hasattr(response, "content_blocks") or not response.content_blocks:
+            return None
+
+        thinking_texts = []
+        for block in response.content_blocks:
+            # Check for thinking block type
+            block_type = getattr(block, "type", None)
+            if block_type in ("thinking", "reasoning"):
+                text = getattr(block, "text", None) or getattr(block, "thinking", None)
+                if text and len(text) > 100:  # Only include substantial blocks
+                    # Take last portion as it's usually the most synthesized
+                    thinking_texts.append(text[-2000:] if len(text) > 2000 else text)
+
+        if not thinking_texts:
+            return None
+
+        # Return the last (most recent/synthesized) thinking block
+        return thinking_texts[-1] if thinking_texts else None
 
     def _extract_response_text(self, response: Any) -> str:
         """Extract text content from a chat response.
